@@ -1,0 +1,2879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="format-detection" content="telephone=no">
+    <title>抢单助手 </title>
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="referrer no-referrer">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1E9FFF;
+            --primary-dark: #0e90d2;
+            --success-color: #67c23a;
+            --warning-color: #e6a23c;
+            --danger-color: #f56c6c;
+            --info-color: #909399;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --text-placeholder: #999999;
+            --border-color: #e6e6e6;
+            --border-light: #f0f0f0;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+            padding: 10px;
+            min-height: 100vh;
+            color: var(--text-primary);
+            margin: 0;
+            width: 100vw;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .card {
+            margin-bottom: 12px;
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            overflow: hidden;
+            width: 100%;
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        
+        .card-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-header i {
+            font-size: 16px;
+            color: var(--primary-color);
+        }
+        
+        .card-body {
+            padding: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        
+        .delay-input {
+            height: 44px;
+            line-height: 44px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0 12px;
+            font-size: 14px;
+            width: 100%;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            transition: var(--transition);
+            text-align: center;
+            -webkit-appearance: none;
+        }
+        
+        .delay-input::placeholder {
+            color: var(--text-placeholder);
+        }
+        
+        .delay-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(30, 159, 255, 0.2);
+        }
+        
+        .select-field {
+            height: 44px;
+            line-height: 44px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0 12px;
+            font-size: 14px;
+            width: 100%;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            transition: var(--transition);
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 11l4-4H4l4 4z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 30px;
+        }
+        
+        .btn {
+            height: 48px;
+            line-height: 48px;
+            padding: 0 20px;
+            border-radius: var(--radius-sm);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            -webkit-appearance: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-default {
+            background-color: #f5f5f5;
+            color: var(--text-secondary);
+        }
+        
+        .btn-default:hover {
+            background-color: #e8e8e8;
+        }
+        
+        .main-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .card-title {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-weight: 600;
+            display flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-title i {
+            font-size: 16px;
+            color: var(--primary-color);
+        }
+        
+        .form-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .form-select {
+            height: 44px;
+            line-height: 44px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0 12px;
+            font-size: 14px;
+            width: 100%;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            transition: var(--transition);
+            -webkit-appearance: none;
+        }
+        
+        .form-input {
+            height: 44px;
+            line-height: 44px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 0 12px;
+            font-size: 14px;
+            width: 100%;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            transition: var(--transition);
+            -webkit-appearance: none;
+        }
+        
+        .form-input::placeholder {
+            color: var(--text-placeholder);
+        }
+        
+        .form-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(30, 159, 255, 0.2);
+        }
+        
+        .login-btn-container {
+            padding: 15px;
+            border-top: 1px solid var(--border-light);
+        }
+        
+        .login-btn-container .btn {
+            width: 100%;
+            height: 50px;
+            line-height: 50px;
+            font-size: 16px;
+        }
+        
+        .btn-blue {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+        }
+        
+        .config-group {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        
+        .config-switch {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .config-checkbox {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
+            -webkit-appearance: none;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            position: relative;
+        }
+        
+        .config-checkbox:checked::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+        }
+        
+        .config-checkbox:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .config-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .price-input {
+            width: 100%;
+            height: 44px;
+            line-height: 44px;
+            padding: 0 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background-color: var(--card-bg);
+            transition: var(--transition);
+            -webkit-appearance: none;
+        }
+        
+        .price-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(30, 159, 255, 0.2);
+        }
+        
+        .keyword-input {
+            width: 100%;
+            height: 44px;
+            line-height: 44px;
+            padding: 0 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            background-color: var(--card-bg);
+            transition: var(--transition);
+            -webkit-appearance: none;
+        }
+        
+        .keyword-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(30, 159, 255, 0.2);
+        }
+        
+        .mobile-login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius-md);
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            padding: 15px;
+            background: #393D49;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .modal-body {
+            padding: 15px;
+        }
+        
+        .modal-footer {
+            padding: 15px;
+            background: #f8f8f8;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid var(--border-light);
+        }
+        
+        .login-input {
+            width: 100%;
+            height: 48px;
+            line-height: 48px;
+            padding: 0 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 15px;
+            transition: var(--transition);
+            -webkit-appearance: none;
+        }
+        
+        .login-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(30, 159, 255, 0.2);
+        }
+        
+        .login-status {
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            display: none;
+        }
+        
+        .login-status.success {
+            background: #f0f9eb;
+            color: var(--success-color);
+            border: 1px solid var(--border-light);
+            display: block;
+        }
+        
+        .login-status.error {
+            background: #fef0f0;
+            color: var(--danger-color);
+            border: 1px solid var(--border-light);
+            display: block;
+        }
+        
+        #grab-strategy-card {
+            margin-bottom: 100px !important;
+        }
+        
+        .start-grab-button-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            background-color: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+            z-index: 99999 !important;
+        }
+        
+        .start-grab-btn {
+            width: 100%;
+            height: 50px;
+            line-height: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer !important;
+            background: linear-gradient(135deg, var(--success-color), #4CAF50);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-appearance: none;
+            position: relative;
+            z-index: 100000 !important;
+            pointer-events: auto !important;
+        }
+        
+        .game-server-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .log-panel-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 9998;
+            display: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .log-panel-container {
+            position: fixed;
+            bottom: 80px;
+            left: 10px;
+            right: 10px;
+            height: 300px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            display: none;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            -webkit-overflow-scrolling: touch;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: pan-y;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        .log-panel-container.resizing {
+            transition: none;
+        }
+        
+        .log-panel-container.collapsed {
+            height: 44px !important;
+        }
+        
+        .log-panel-container.minimized {
+            width: 50px !important;
+            height: 50px !important;
+            border-radius: 50% !important;
+            overflow: visible !important;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            box-shadow: 0 4px 20px rgba(30, 159, 255, 0.4);
+            cursor: pointer;
+            display: block !important;
+            left: auto !important;
+            right: 20px !important;
+            bottom: 90px !important;
+        }
+        
+        .log-panel-container.minimized .log-panel-header,
+        .log-panel-container.minimized .log-panel-content,
+        .log-panel-container.minimized .resize-handle,
+        .log-panel-container.minimized .drag-handle {
+            display: none !important;
+        }
+        
+        .log-panel-container.minimized .minimized-indicator {
+            display: flex !important;
+        }
+        
+        .log-panel-container.minimized:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(30, 159, 255, 0.5);
+        }
+        
+        .log-panel-container.collapsed .log-panel-content {
+            display: none;
+        }
+        
+        .log-panel-header {
+            padding: 12px 15px;
+            background: linear-gradient(135deg, #393D49, #2c303a);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .log-panel-header h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .log-panel-header h3 i {
+            color: var(--primary-color);
+        }
+        
+        .log-panel-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .log-panel-control-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .log-panel-control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 1;
+        }
+        
+        .log-panel-content {
+            height: calc(100% - 44px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .log-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            min-height: 50px;
+        }
+        
+        .log-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            min-height: 100%;
+        }
+        
+        .log-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+            line-height: 1.4;
+            word-break: break-all;
+            animation: fadeIn 0.3s ease;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .log-item.success {
+            background: linear-gradient(to right, rgba(103, 194, 58, 0.05), transparent);
+            border-left: 3px solid var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .log-item.info {
+            background: linear-gradient(to right, rgba(144, 147, 153, 0.05), transparent);
+            border-left: 3px solid var(--info-color);
+            color: var(--text-secondary);
+        }
+        
+        .log-item.warning {
+            background: linear-gradient(to right, rgba(230, 162, 60, 0.05), transparent);
+            border-left: 3px solid var(--warning-color);
+            color: var(--warning-color);
+        }
+        
+        .log-item.error {
+            background: linear-gradient(to right, rgba(245, 108, 108, 0.05), transparent);
+            border-left: 3px solid var(--danger-color);
+            color: var(--danger-color);
+        }
+        
+        .log-item.order {
+            background: linear-gradient(to right, rgba(30, 159, 255, 0.05), transparent);
+            border-left: 3px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .log-item.grabbing {
+            background: linear-gradient(to right, rgba(230, 162, 60, 0.05), transparent);
+            border-left: 3px solid var(--warning-color);
+            color: var(--warning-color);
+            font-weight: 600;
+        }
+        
+        .log-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-right: 8px;
+            display: inline-block;
+            min-width: 48px;
+        }
+        
+        .log-level {
+            font-weight: 600;
+            margin-right: 8px;
+            display: inline-block;
+            min-width: 28px;
+        }
+        
+        .log-message {
+            flex: 1;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            top: -4px;
+            left: 0;
+            right: 0;
+            height: 8px;
+            cursor: ns-resize;
+            z-index: 1004;
+        }
+        
+        .drag-handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            cursor: move;
+            z-index: 1;
+        }
+        
+        .minimized-indicator {
+            display: none;
+            width: 100%;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            position: relative;
+        }
+        
+        .minimized-icon {
+            font-size: 20px;
+        }
+        
+        .log-count-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            font-size: 10px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+        
+        .grab-active {
+            background: linear-gradient(135deg, var(--danger-color), #c45656) !important;
+        }
+        
+        .grab-active:hover {
+            opacity: 0.9 !important;
+        }
+        
+        /* 进度条样式 */
+        .loading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+            z-index: 100001;
+            transform-origin: left;
+            animation: loadingProgress 2s ease-in-out infinite;
+            display: none;
+        }
+        
+        @keyframes loadingProgress {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* 接口加载统计面板 */
+        .api-stats-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: var(--radius-md);
+            padding: 15px;
+            box-shadow: var(--shadow-md);
+            z-index: 9997;
+            display: none;
+            min-width: 200px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-light);
+        }
+        
+        .api-stats-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .api-stats-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+        }
+        
+        .api-stats-value {
+            font-weight: 600;
+        }
+        
+        .api-stats-success { color: var(--success-color); }
+        .api-stats-warning { color: var(--warning-color); }
+        .api-stats-error { color: var(--danger-color); }
+        
+        /* 通知样式 */
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #52c41a;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100002;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        @media (min-width: 768px) {
+            body {
+                padding: 15px;
+                max-width: 600px;
+                margin: 0 auto;
+                padding-bottom: 0;
+            }
+            .config-group {
+                grid-template-columns: 1fr 1fr;
+            }
+            .card {
+                margin-bottom: 15px;
+            }
+            #grab-strategy-card {
+                margin-bottom: 110px !important;
+            }
+            .start-grab-button-container {
+                max-width: 600px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            .log-panel-container {
+                left: 50%;
+                transform: translateX(-50%);
+                max-width: 560px;
+                right: auto;
+            }
+            .log-panel-container.minimized {
+                right: 20px !important;
+                left: auto !important;
+                transform: none;
+            }
+            .api-stats-panel {
+                right: 20px;
+                top: 20px;
+            }
+        }
+        
+        @media (max-width: 767px) {
+            .log-panel-container.minimized {
+                right: 10px !important;
+                bottom: 80px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <body>
+
+        <body>
+
+            <body>
+                <!-- 公告 -->
+                <div style="background: linear-gradient(135deg, #67c23a, #5daf34); color: white; border-radius: var(--radius-md); padding: 12px 15px; margin-bottom: 15px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 13px; opacity: 0.95; line-height: 1.4;">
+                                此版本已彻底删除所有后门代码，并且开源，请放心使用！
+                            </div>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.style.display='none'" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; flex-shrink: 0; font-size: 12px;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 抢单成功提示音 -->
+                <audio id="grabSuccessSound" preload="auto">
+                    <source src="https://www.cccimg.com/view.php/b31ea7cda8fdd7f1fb845d85fb2b7d52.mp3" type="audio/mpeg">
+                </audio>
+
+                <!-- 顶部进度条 -->
+                <div class="loading-progress" id="loadingProgress"></div>
+
+                <!-- 接口统计面板 -->
+                <div class="api-stats-panel" id="apiStatsPanel">
+                    <div class="api-stats-header">
+                        <i class="fas fa-chart-line"></i>
+                        <span>接口加载统计</span>
+                    </div>
+                    <div class="api-stats-item">
+                        <span>总接口数:</span>
+                        <span class="api-stats-value" id="totalApis">0</span>
+                    </div>
+                    <div class="api-stats-item">
+                        <span>成功:</span>
+                        <span class="api-stats-value api-stats-success" id="successApis">0</span>
+                    </div>
+                    <div class="api-stats-item">
+                        <span>失败:</span>
+                        <span class="api-stats-value api-stats-error" id="failedApis">0</span>
+                    </div>
+                    <div class="api-stats-item">
+                        <span>耗时:</span>
+                        <span class="api-stats-value" id="loadTime">0ms</span>
+                    </div>
+                    <div class="api-stats-item">
+                        <span>并发数:</span>
+                        <span class="api-stats-value" id="concurrentCount">0</span>
+                    </div>
+                </div>
+
+                <div class="mobile-login-modal" id="mobileLoginModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <span>手机号登录</span>
+                            <button onclick="closeMobileLoginModal()" style="background:none;border:none;color:white;cursor:pointer;font-size:20px;">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="tel" id="mobileInput" class="login-input" placeholder="请输入手机号" maxlength="11">
+                            <input type="password" id="passwordInput" class="login-input" placeholder="请输入密码">
+                            <div id="loginStatus" style="padding: 10px; border-radius: 4px; margin: 10px 0; display: none;"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" onclick="loginWithPassword()">登录</button>
+                            <button class="btn btn-default" onclick="closeMobileLoginModal()">取消</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 悬浮日志面板 -->
+                <div class="log-panel-overlay" id="logPanelOverlay"></div>
+                <div class="log-panel-container" id="logPanelContainer">
+                    <div class="resize-handle" id="resizeHandle"></div>
+                    <div class="log-panel-header">
+                        <div class="drag-handle"></div>
+                        <h3>
+                            <i class="fas fa-scroll"></i>
+                            <span id="logPanelTitle">抢单日志</span>
+                            <span id="logCount" style="font-size: 12px; opacity: 0.8;">(0)</span>
+                        </h3>
+                        <div class="log-panel-controls">
+                            <button class="log-panel-control-btn" id="minimizeLogPanelBtn" title="最小化">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="log-panel-control-btn" id="toggleLogPanelBtn" title="收缩/展开">
+                                <i class="fas fa-chevron-up"></i>
+                            </button>
+                            <button class="log-panel-control-btn" id="closeLogPanelBtn" title="关闭面板">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="log-panel-content">
+                        <div class="log-list-container">
+                            <ul class="log-list" id="logList"></ul>
+                        </div>
+                    </div>
+                    <div class="minimized-indicator" id="minimizedIndicator">
+                        <i class="fas fa-scroll minimized-icon"></i>
+                        <div class="log-count-badge" id="minimizedLogCount">0</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">
+                        授权管理
+                    </div>
+                    <div class="form-item">
+                        <select class="form-select" id="clubSelect">
+                            <option value="keg">1H电竞</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <input type="text" class="form-input" id="tokenInput" placeholder="请输入令牌">
+                    </div>
+                    <div class="login-btn-container">
+                        <button class="btn btn-blue" id="mobileLoginBtn">
+                            手机号登录
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        游戏区服选择
+                    </div>
+                    <div class="card-body">
+                        <div class="game-server-group">
+                            <div class="form-group">
+                                <label class="form-label">选择游戏</label>
+                                <select id="gameSelect" class="select-field">
+                                    <option value="">请选择游戏</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">选择区服</label>
+                                <select id="serverSelect" class="select-field" disabled>
+                                    <option value="">请先选择游戏</option>
+                                    <option value="all">全部</option>
+                                    <option value="wechat">微信</option>
+                                    <option value="qq">QQ</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="grab-strategy-card">
+                    <div class="card-header">
+                        抢单策略
+                    </div>
+                    <div class="card-body">
+                        <div class="config-group">
+                            <div class="form-group">
+                                <label class="form-label">刷新延迟 (ms)</label>
+                                <input type="number" id="refreshDelay" class="delay-input" placeholder="毫秒" value="200" min="10">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">抢单延迟 (ms)</label>
+                                <input type="number" id="grabDelay" class="delay-input" placeholder="毫秒" value="100" min="10">
+                            </div>
+                        </div>
+                        <hr style="border: none; border-top: 1px solid var(--border-light); margin: 15px 0;">
+                        <div class="form-group">
+                            <div class="config-switch">
+                                <input type="checkbox" class="config-checkbox" id="priceCheck" checked>
+                                <label class="config-label" for="priceCheck">启用全局价格过滤</label>
+                            </div>
+                            <input type="number" id="globalPrice" class="price-input" placeholder="请输入目标价格" min="0">
+                        </div>
+                        <hr style="border: none; border-top: 1px solid var(--border-light); margin: 15px 0;">
+                        <div class="form-group">
+                            <div class="config-switch">
+                                <input type="checkbox" class="config-checkbox" id="whiteKeywordCheck" checked>
+                                <label class="config-label" for="whiteKeywordCheck">启用白名单关键词（多个用 | 分隔）</label>
+                            </div>
+                            <input type="text" class="keyword-input" id="whiteKeyword" placeholder="例如：代练|陪玩" value="代练|陪玩">
+                        </div>
+                        <div class="form-group">
+                            <div class="config-switch">
+                                <input type="checkbox" class="config-checkbox" id="blackKeywordCheck" checked>
+                                <label class="config-label" for="blackKeywordCheck">启用黑名单关键词（多个用 | 分隔）</label>
+                            </div>
+                            <input type="text" class="keyword-input" id="blackKeyword" placeholder="例如：测试|免费" value="测试|免费">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="start-grab-button-container">
+                    <button id="startGrabBtn" class="start-grab-btn" onclick="startGrabbing()">
+                        <i class="fas fa-play"></i>
+                        <span>开始抢单</span>
+                    </button>
+                </div>
+
+                <script>
+
+const API_BASE_URL = "https://yh-club.aneapp.cn",
+  SECRET_KEY = "GXt@fgc.t";
+
+let currentUserToken = "",
+  currentUserId = "",
+  currentNickname = "",
+  isGrabbing = false,
+  grabInterval = null,
+  lastRefreshTime = 0,
+  pendingOrders = [],
+  grabStatistics = {
+    totalAttempts: 0,
+    successfulGrabs: 0,
+    failedGrabs: 0,
+    lastSuccessTime: null
+  };
+
+const gameServerMap = {
+    1: {
+      qq: [4],
+      wechat: [5],
+      all: [4, 5]
+    },
+    15: {
+      qq: [16],
+      wechat: [17],
+      all: [16, 17]
+    },
+    18: {
+      qq: [20],
+      wechat: [19],
+      all: [19, 20]
+    },
+    3: {
+      all: [6, 7]
+    },
+    2: {
+      all: [13, 14]
+    },
+    21: {
+      qq: [23],
+      wechat: [22],
+      all: [22, 23]
+    },
+    28: {
+      all: []
+    }
+  },
+  deviceInfo = {
+    androidVersion: "Android 15",
+    phoneModel: "PJA110",
+    chromeVersion: "134.0.6998.135",
+    brand: "oneplus",
+    deviceType: "phone",
+    system: "Android 15",
+    platform: "android",
+    osVersion: "15",
+    romName: "HydrogenOS",
+    uniRuntimeVersion: "4.87",
+    uniCompileVersion: "4.75",
+    appVersion: "1.5.12",
+    appVersionCode: "1512",
+    version: "1.9.9.82537",
+    deviceModel: "PJA110",
+    deviceBrand: "oneplus",
+    osName: "android",
+    deviceOrientation: "portrait",
+    screenWidth: 354,
+    screenHeight: 792,
+    windowWidth: 354,
+    windowHeight: 792,
+    pixelRatio: 3.5,
+    devicePixelRatio: 3.5,
+    safeAreaTop: 40,
+    safeAreaBottom: 792,
+    safeAreaLeft: 0,
+    safeAreaRight: 354,
+    safeAreaWidth: 354,
+    safeAreaHeight: 752,
+    statusBarHeight: 40,
+    safeAreaInsetsTop: 40,
+    safeAreaInsetsBottom: 0,
+    safeAreaInsetsLeft: 0,
+    safeAreaInsetsRight: 0
+  };
+
+function fenToYuan(fen) {
+  return (fen / 100).toFixed(2);
+}
+
+const SettingsManager = {
+  STORAGE_KEY: "grab_assistant_settings",
+  
+  saveSettings() {
+    const settings = {
+      token: document.getElementById("tokenInput").value,
+      gameId: document.getElementById("gameSelect").value,
+      serverType: document.getElementById("serverSelect").value,
+      refreshDelay: document.getElementById("refreshDelay").value,
+      grabDelay: document.getElementById("grabDelay").value,
+      priceCheck: document.getElementById("priceCheck").checked,
+      globalPrice: document.getElementById("globalPrice").value,
+      whiteKeywordCheck: document.getElementById("whiteKeywordCheck").checked,
+      whiteKeyword: document.getElementById("whiteKeyword").value,
+      blackKeywordCheck: document.getElementById("blackKeywordCheck").checked,
+      blackKeyword: document.getElementById("blackKeyword").value
+    };
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings));
+    LogManager.addLog("info", "设置已自动保存");
+  },
+  
+  loadSettings() {
+    const saved = localStorage.getItem(this.STORAGE_KEY);
+    if (saved) {
+      try {
+        const settings = JSON.parse(saved);
+        if (settings.token) document.getElementById("tokenInput").value = settings.token;
+        if (settings.gameId) document.getElementById("gameSelect").value = settings.gameId;
+        if (settings.serverType) document.getElementById("serverSelect").value = settings.serverType;
+        if (settings.refreshDelay) document.getElementById("refreshDelay").value = settings.refreshDelay;
+        if (settings.grabDelay) document.getElementById("grabDelay").value = settings.grabDelay;
+        if (settings.priceCheck !== undefined) document.getElementById("priceCheck").checked = settings.priceCheck;
+        if (settings.globalPrice) document.getElementById("globalPrice").value = settings.globalPrice;
+        if (settings.whiteKeywordCheck !== undefined) document.getElementById("whiteKeywordCheck").checked = settings.whiteKeywordCheck;
+        if (settings.whiteKeyword) document.getElementById("whiteKeyword").value = settings.whiteKeyword;
+        if (settings.blackKeywordCheck !== undefined) document.getElementById("blackKeywordCheck").checked = settings.blackKeywordCheck;
+        if (settings.blackKeyword) document.getElementById("blackKeyword").value = settings.blackKeyword;
+        if (settings.gameId) document.getElementById("serverSelect").disabled = false;
+        LogManager.addLog("info", "设置已自动恢复");
+      } catch (e) {
+        console.error("加载设置失败:", e);
+      }
+    }
+  },
+  
+  initAutoSave() {
+    ["tokenInput", "gameSelect", "serverSelect", "refreshDelay", "grabDelay", "globalPrice", "whiteKeyword", "blackKeyword"].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener("input", () => this.saveSettings());
+        element.addEventListener("change", () => this.saveSettings());
+      }
+    });
+    
+    ["priceCheck", "whiteKeywordCheck", "blackKeywordCheck"].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener("change", () => this.saveSettings());
+      }
+    });
+  }
+};
+
+function playSuccessSound() {
+  try {
+    const audio = document.getElementById("grabSuccessSound");
+    if (audio) {
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          console.log("✅ 提示音播放成功");
+        }).catch(error => {
+          console.warn("⚠️ 自动播放被阻止，用户可能需要交互:", error);
+        });
+      }
+    } else {
+      console.warn("⚠️ 未找到音频元素");
+    }
+  } catch (error) {
+    console.error("❌ 播放提示音失败:", error);
+  }
+}
+
+const LogManager = {
+  logs: [],
+  maxLogs: 1000,
+  isPanelCollapsed: false,
+  isPanelMinimized: false,
+  isDragging: false,
+  isResizing: false,
+  startY: 0,
+  startHeight: 0,
+  startTop: 0,
+  originalPosition: {
+    top: 0,
+    left: 0,
+    width: 0,
+    height: 0
+  },
+  
+  addLog(level, message) {
+    const now = new Date();
+    const logEntry = {
+      id: Date.now() + Math.random(),
+      time: now.toLocaleTimeString("zh-CN", { hour12: false }),
+      level: level,
+      message: message,
+      timestamp: now.getTime()
+    };
+    this.logs.unshift(logEntry);
+    if (this.logs.length > this.maxLogs) {
+      this.logs.pop();
+    }
+    this.updateLogDisplay();
+    return logEntry;
+  },
+  
+  updateLogDisplay() {
+    const logList = document.getElementById("logList");
+    const logCount = document.getElementById("logCount");
+    const minimizedLogCount = document.getElementById("minimizedLogCount");
+    
+    logCount.textContent = "(" + this.logs.length + ")";
+    minimizedLogCount.textContent = this.logs.length > 99 ? "99+" : this.logs.length;
+    
+    const displayLogs = this.logs.slice(0, 50);
+    logList.innerHTML = displayLogs.map(log => `
+            <li class="log-item ${log.level}">
+                <span class="log-time">${log.time}</span>
+                <span class="log-message">${this.escapeHtml(log.message)}</span>
+            </li>
+        `).join("");
+    
+    if (!this.isPanelCollapsed && !this.isPanelMinimized) {
+      document.querySelector(".log-list-container").scrollTop = 0;
+    }
+  },
+  
+  clearLogs() {
+    this.logs = [];
+    this.updateLogDisplay();
+    this.addLog("info", "日志已清空");
+  },
+  
+  escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  },
+  
+  togglePanel() {
+    if (this.isPanelMinimized) return;
+    
+    const panel = document.getElementById("logPanelContainer");
+    this.isPanelCollapsed = !this.isPanelCollapsed;
+    panel.classList.toggle("collapsed");
+    
+    const toggleBtn = document.getElementById("toggleLogPanelBtn");
+    const icon = toggleBtn.querySelector("i");
+    if (this.isPanelCollapsed) {
+      icon.className = "fas fa-chevron-down";
+      toggleBtn.title = "展开面板";
+    } else {
+      icon.className = "fas fa-chevron-up";
+      toggleBtn.title = "收缩面板";
+    }
+    
+    setTimeout(() => {
+      this.adjustPanelPosition();
+    }, 300);
+  },
+  
+  minimizePanel() {
+    const panel = document.getElementById("logPanelContainer");
+    const overlay = document.getElementById("logPanelOverlay");
+    
+    if (this.isPanelMinimized) {
+      this.restorePanel();
+      return;
+    }
+    
+    this.originalPosition = {
+      top: panel.offsetTop,
+      left: panel.offsetLeft,
+      width: panel.offsetWidth,
+      height: panel.offsetHeight
+    };
+    
+    this.isPanelMinimized = true;
+    this.isPanelCollapsed = false;
+    panel.classList.add("minimized");
+    panel.classList.remove("collapsed");
+    overlay.style.display = "none";
+    
+    const buttonHeight = document.querySelector(".start-grab-button-container").offsetHeight;
+    const isMobile = window.innerWidth < 768;
+    const bottomPosition = buttonHeight + 20;
+    
+    panel.style.top = "auto";
+    panel.style.bottom = bottomPosition + "px";
+    panel.style.right = (isMobile ? 10 : 20) + "px";
+    panel.style.left = "auto";
+    panel.style.width = "50px";
+    panel.style.height = "50px";
+    panel.style.borderRadius = "50%";
+    panel.style.display = "block";
+    
+    const minimizeBtn = document.getElementById("minimizeLogPanelBtn");
+    minimizeBtn.querySelector("i").className = "fas fa-window-restore";
+    minimizeBtn.title = "恢复面板";
+  },
+  
+  restorePanel() {
+    const panel = document.getElementById("logPanelContainer");
+    const overlay = document.getElementById("logPanelOverlay");
+    
+    this.isPanelMinimized = false;
+    panel.classList.remove("minimized");
+    
+    panel.style.top = this.originalPosition.top + "px";
+    panel.style.left = this.originalPosition.left + "px";
+    panel.style.width = this.originalPosition.width + "px";
+    panel.style.height = this.originalPosition.height + "px";
+    panel.style.bottom = "auto";
+    panel.style.right = "auto";
+    panel.style.borderRadius = "12px";
+    
+    const minimizeBtn = document.getElementById("minimizeLogPanelBtn");
+    minimizeBtn.querySelector("i").className = "fas fa-minus";
+    minimizeBtn.title = "最小化面板";
+    
+    overlay.style.display = "block";
+  },
+  
+  adjustPanelPosition() {
+    if (this.isPanelMinimized) return;
+    
+    const panel = document.getElementById("logPanelContainer");
+    const rect = panel.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const buttonHeight = document.querySelector(".start-grab-button-container").offsetHeight;
+    
+    if (rect.bottom > windowHeight - buttonHeight) {
+      const newTop = windowHeight - buttonHeight - rect.height - 10;
+      panel.style.top = Math.max(10, newTop) + "px";
+    }
+  },
+  
+  showPanel() {
+    if (this.isPanelMinimized) {
+      this.restorePanel();
+      return;
+    }
+    
+    const panel = document.getElementById("logPanelContainer");
+    const overlay = document.getElementById("logPanelOverlay");
+    
+    panel.style.display = "block";
+    overlay.style.display = "block";
+    this.adjustPanelPosition();
+  },
+  
+  hidePanel() {
+    this.minimizePanel();
+  },
+  
+  initDragAndResize() {
+    const panel = document.getElementById("logPanelContainer");
+    const header = document.querySelector(".log-panel-header");
+    const resizeHandle = document.getElementById("resizeHandle");
+    
+    header.addEventListener("mousedown", e => {
+      if (this.isPanelMinimized || e.target.closest(".log-panel-control-btn")) return;
+      this.isDragging = true;
+      this.startY = e.clientY;
+      this.startTop = panel.offsetTop;
+      document.body.style.userSelect = "none";
+      panel.style.transition = "none";
+    });
+    
+    resizeHandle.addEventListener("mousedown", e => {
+      if (this.isPanelMinimized) return;
+      e.preventDefault();
+      this.isResizing = true;
+      this.startY = e.clientY;
+      this.startHeight = panel.offsetHeight;
+      document.body.style.userSelect = "none";
+      panel.classList.add("resizing");
+    });
+    
+    document.addEventListener("mousemove", e => {
+      if (this.isDragging) {
+        e.preventDefault();
+        const deltaY = e.clientY - this.startY;
+        const buttonHeight = document.querySelector(".start-grab-button-container").offsetHeight;
+        const maxTop = window.innerHeight - buttonHeight - (this.isPanelCollapsed ? 44 : 300);
+        const newTop = Math.max(10, Math.min(maxTop, this.startTop + deltaY));
+        panel.style.top = newTop + "px";
+      }
+      
+      if (this.isResizing) {
+        e.preventDefault();
+        const deltaY = this.startY - e.clientY;
+        const buttonHeight = document.querySelector(".start-grab-button-container").offsetHeight;
+        const maxHeight = window.innerHeight - panel.offsetTop - buttonHeight - 20;
+        const newHeight = Math.max(100, Math.min(maxHeight, this.startHeight + deltaY));
+        panel.style.height = newHeight + "px";
+      }
+    });
+    
+    document.addEventListener("mouseup", () => {
+      if (this.isDragging || this.isResizing) {
+        this.isDragging = false;
+        this.isResizing = false;
+        document.body.style.userSelect = "";
+        panel.style.transition = "all 0.3s ease";
+        panel.classList.remove("resizing");
+      }
+    });
+    
+    header.addEventListener("touchstart", e => {
+      if (this.isPanelMinimized || e.target.closest(".log-panel-control-btn")) return;
+      this.isDragging = true;
+      this.startY = e.touches[0].clientY;
+      this.startTop = panel.offsetTop;
+      document.body.style.userSelect = "none";
+      panel.style.transition = "none";
+      e.preventDefault();
+    }, { passive: false });
+    
+    resizeHandle.addEventListener("touchstart", e => {
+      if (this.isPanelMinimized) return;
+      this.isResizing = true;
+      this.startY = e.touches[0].clientY;
+      this.startHeight = panel.offsetHeight;
+      document.body.style.userSelect = "none";
+      panel.classList.add("resizing");
+      e.preventDefault();
+    }, { passive: false });
+    
+    document.addEventListener("touchmove", e => {
+      if (this.isDragging || this.isResizing) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        
+        if (this.isDragging) {
+          const deltaY = touch.clientY - this.startY;
+          const buttonHeight = document.querySelector(".start-grab-button-container").offsetHeight;
+          const maxTop = window.innerHeight - buttonHeight - (this.isPanelCollapsed ? 44 : 300);
+          const newTop = Math.max(10, Math.min(maxTop, this.startTop + deltaY));
+          panel.style.top = newTop + "px";
+        }
+        
+        if (this.isResizing) {
+          const deltaY = this.startY - touch.clientY;
+          const buttonHeight = document.querySelector(".start-grab-button-container").offsetHeight;
+          const maxHeight = window.innerHeight - panel.offsetTop - buttonHeight - 20;
+          const newHeight = Math.max(100, Math.min(maxHeight, this.startHeight + deltaY));
+          panel.style.height = newHeight + "px";
+        }
+      }
+    }, { passive: false });
+    
+    document.addEventListener("touchend", () => {
+      if (this.isDragging || this.isResizing) {
+        this.isDragging = false;
+        this.isResizing = false;
+        document.body.style.userSelect = "";
+        panel.style.transition = "all 0.3s ease";
+        panel.classList.remove("resizing");
+      }
+    });
+    
+    panel.addEventListener("click", e => {
+      if (this.isPanelMinimized && !e.target.closest(".log-panel-control-btn")) {
+        this.restorePanel();
+      }
+    });
+  }
+};
+
+function parseUrlParams(url) {
+  const params = {};
+  try {
+    new URL(url).searchParams.forEach((value, key) => {
+      params[key] = value;
+    });
+  } catch (e) {
+    console.error("解析URL参数失败:", e);
+  }
+  return params;
+}
+
+function generateXSignature(params, secretKey) {
+  const sortedParams = {};
+  for (const key in params) {
+    if (params.hasOwnProperty(key)) {
+      const value = params[key];
+      sortedParams[key] = value !== null ? String(value) : "";
+    }
+  }
+  
+  const sortedKeys = Object.keys(sortedParams).sort();
+  const signStr = sortedKeys.map(key => key + "=" + sortedParams[key]).join("&");
+  
+  return {
+    signature: CryptoJS.HmacSHA256(signStr, secretKey).toString(),
+    signStr: signStr
+  };
+}
+
+async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+}
+
+function generateDeviceFingerprint() {
+  const deviceString = [
+    deviceInfo.brand,
+    deviceInfo.phoneModel,
+    deviceInfo.androidVersion,
+    deviceInfo.appVersion,
+    navigator.userAgent,
+    Math.random().toString(36).substr(2, 8)
+  ].join("|");
+  
+  return CryptoJS.MD5(deviceString).toString().substr(0, 16);
+}
+
+function generateNonce() {
+  return (
+    Math.random().toString(36).substr(2, 10) +
+    Date.now().toString(36) +
+    Math.random().toString(36).substr(2, 5)
+  );
+}
+
+function generateFullHeaders(url, bodyParams = null) {
+  const timestamp = Date.now();
+  let params = {};
+  
+  const urlParams = parseUrlParams(url);
+  if (bodyParams && Object.keys(bodyParams).length > 0) {
+    params = Object.assign({}, bodyParams, { t: timestamp.toString() });
+  } else {
+    params = urlParams;
+    if (!params.t) {
+      params.t = timestamp.toString();
+    }
+  }
+  
+  const signature = generateXSignature(params, SECRET_KEY);
+  const deviceFp = generateDeviceFingerprint();
+  const nonce = generateNonce();
+  const requestId = timestamp + "-" + Math.random().toString(36).substr(2, 9);
+  const userAgent = `Mozilla/5.0 (Linux; ${deviceInfo.androidVersion}; ${deviceInfo.phoneModel} Build/AP3A.240617.008; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/${deviceInfo.chromeVersion} Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/39.714287)`;
+  
+  let authToken = "";
+  if (currentUserToken && currentUserToken.trim()) {
+    authToken = currentUserToken.trim();
+  }
+  
+  const headers = new Headers();
+  headers.append("Accept", "*/*");
+  headers.append("Accept-Encoding", "gzip");
+  headers.append("Accept-Language", "zh-CN,zh;q=0.9");
+  headers.append("Content-Type", "application/json;charset=UTF-8");
+  headers.append("Connection", "Keep-Alive");
+  headers.append("Host", "yh-club.aneapp.cn");
+  headers.append("xSignature", signature.signature);
+  headers.append("X-Signature", signature.signature);
+  if (authToken) headers.append("Authorization", authToken);
+  headers.append("X-Timestamp", timestamp.toString());
+  headers.append("X-Device-Fp", deviceFp);
+  headers.append("X-Request-Id", requestId);
+  headers.append("X-Nonce", nonce);
+  headers.append("tenant-id", "1");
+  headers.append("terminal", "31");
+  headers.append("app-role", "0");
+  headers.append("platform", "android");
+  headers.append("appVersion", deviceInfo.appVersion);
+  headers.append("appVersionCode", deviceInfo.appVersionCode);
+  headers.append("version", deviceInfo.version);
+  headers.append("uniRuntimeVersion", deviceInfo.uniRuntimeVersion);
+  headers.append("uniCompileVersion", deviceInfo.uniCompileVersion);
+  headers.append("model", deviceInfo.phoneModel);
+  headers.append("brand", deviceInfo.brand);
+  headers.append("deviceType", deviceInfo.deviceType);
+  headers.append("system", deviceInfo.system);
+  headers.append("osVersion", deviceInfo.osVersion);
+  headers.append("osName", deviceInfo.osName);
+  headers.append("deviceBrand", deviceInfo.deviceBrand);
+  headers.append("deviceModel", deviceInfo.deviceModel);
+  headers.append("deviceOrientation", deviceInfo.deviceOrientation);
+  headers.append("romName", deviceInfo.romName);
+  headers.append("screenWidth", deviceInfo.screenWidth.toString());
+  headers.append("screenHeight", deviceInfo.screenHeight.toString());
+  headers.append("windowWidth", deviceInfo.windowWidth.toString());
+  headers.append("windowHeight", deviceInfo.windowHeight.toString());
+  headers.append("pixelRatio", deviceInfo.pixelRatio.toString());
+  headers.append("devicePixelRatio", deviceInfo.devicePixelRatio.toString());
+  headers.append("safeAreaTop", deviceInfo.safeAreaTop.toString());
+  headers.append("safeAreaBottom", deviceInfo.safeAreaBottom.toString());
+  headers.append("safeAreaLeft", deviceInfo.safeAreaLeft.toString());
+  headers.append("safeAreaRight", deviceInfo.safeAreaRight.toString());
+  headers.append("safeAreaWidth", deviceInfo.safeAreaWidth.toString());
+  headers.append("safeAreaHeight", deviceInfo.safeAreaHeight.toString());
+  headers.append("statusBarHeight", deviceInfo.statusBarHeight.toString());
+  headers.append("safeAreaInsetsTop", deviceInfo.safeAreaInsetsTop.toString());
+  headers.append("safeAreaInsetsBottom", deviceInfo.safeAreaInsetsBottom.toString());
+  headers.append("safeAreaInsetsLeft", deviceInfo.safeAreaInsetsLeft.toString());
+  headers.append("safeAreaInsetsRight", deviceInfo.safeAreaInsetsRight.toString());
+  headers.append("currentPage", "pages/home/index");
+  headers.append("appLanguage", "zh-Hans");
+  headers.append("enableDebug", "0");
+  headers.append("uniPlatform", "app");
+  headers.append("appAuthCamera", "denied");
+  headers.append("appAuthMicrophone", "config error");
+  headers.append("appAuthLocation", "config error");
+  headers.append("appAuthNotification", "denied");
+  
+  [
+    "safeAreaInsetsBottom",
+    "romVersion",
+    "safeAreaInsetsRight",
+    "hostPackageName",
+    "hostLanguage",
+    "hostVersion",
+    "screenTop",
+    "hostName",
+    "safeAreaInsetsLeft",
+    "windowTop",
+    "hostFontSizeSetting",
+    "safeAreaLeft",
+    "abi",
+    "fontSizeSetting",
+    "appAuthPhotoLibrary",
+    "hostSDKVersion",
+    "SDKVersion",
+    "windowBottom"
+  ].forEach(key => {
+    headers.append(key, "");
+  });
+  
+  headers.append("User-Agent", userAgent);
+  
+  return headers;
+}
+
+async function generateCaptcha() {
+  try {
+    const params = {
+      t: Date.now().toString()
+    };
+    const url = API_BASE_URL + "/app-api/ap/captcha/generate?" + new URLSearchParams(params);
+    
+    const response = await fetchWithTimeout(
+      url,
+      {
+        method: "GET",
+        headers: generateFullHeaders(url)
+      },
+      5000
+    );
+    
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+    
+    const result = await response.json();
+    if (result && result.code === 0 && result.data) {
+      LogManager.addLog("info", "✅ 验证码数据获取成功");
+      return {
+        captchaId: result.data.captchaId,
+        puzzleX: result.data.puzzleX,
+        puzzleY: result.data.puzzleY,
+        backgroundImage: result.data.backgroundImage,
+        puzzleImage: result.data.puzzleImage
+      };
+    }
+    
+    throw new Error(result?.msg || "验证码生成失败");
+  } catch (error) {
+    LogManager.addLog("error", "❌ 验证码生成失败: " + error.message);
+    throw error;
+  }
+}
+
+async function verifyCaptcha(captchaId, slideX) {
+  try {
+    const params = {
+      captchaId: captchaId,
+      slideX: Math.round(slideX).toString()
+    };
+    
+    const url = API_BASE_URL + "/app-api/ap/captcha/verify";
+    const signature = generateXSignature(params, SECRET_KEY);
+    const captchaToken = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+    });
+    
+    const headers = {
+      "Content-Type": "application/json;charset=UTF-8",
+      "Accept": "*/*",
+      "tenant-id": "1",
+      "terminal": "31",
+      "app-role": "0",
+      "Authorization": currentUserToken,
+      "xSignature": signature.signature,
+      "X-Captcha-Token": captchaToken,
+      "platform": "",
+      "charset": "utf-8",
+      "User-Agent": "Mozilla/5.0 (Linux; Android 15; PLC110 Build/AP3A.240617.008; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/134.0.6998.135 Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/39.714287)"
+    };
+    
+    const body = {
+      captchaId: captchaId,
+      slideX: Math.round(slideX)
+    };
+    
+    console.log("验证码验证请求:", {
+      url: url,
+      headers: headers,
+      body: body,
+      signature: signature.signature,
+      signStr: signature.queryString
+    });
+    
+    const response = await fetchWithTimeout(url, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(body)
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error("HTTP错误: " + response.status + "，详情: " + errorText);
+    }
+    
+    const result = await response.json();
+    console.log("验证码验证响应:", result);
+    
+    if (result && result.code === 0) {
+      if (result.data && result.data.token) {
+        console.log("✅ 验证成功，token:", result.data.token);
+        return result.data.token;
+      } else if (result.data && result.data.success) {
+        console.log("✅ 验证成功，返回success标志");
+        return "captcha_verified";
+      } else {
+        console.log("✅ 验证成功，但没有token，返回完整数据:", result);
+        return result.data || "captcha_verified";
+      }
+    }
+    
+    if (result?.code === 403) {
+      console.error("❌ 签名验证失败:", result);
+      throw new Error("签名验证失败: " + (result.msg || "服务器拒绝"));
+    }
+    
+    console.error("❌ 验证码验证失败:", result);
+    throw new Error(result?.msg || "验证码验证失败");
+  } catch (error) {
+    console.error("❌ 验证码验证异常:", error);
+    throw error;
+  }
+}
+
+async function getCaptchaToken() {
+  try {
+    LogManager.addLog("info", "🔄 获取验证码token...");
+    const captchaData = await generateCaptcha();
+    
+    if (!captchaData || !captchaData.captchaId || captchaData.puzzleX === undefined) {
+      throw new Error("验证码数据不完整");
+    }
+    
+    const token = await verifyCaptcha(captchaData.captchaId, captchaData.puzzleX);
+    
+    if (token) {
+      LogManager.addLog("success", "✅ 验证码token获取成功");
+      return token;
+    }
+    
+    throw new Error("验证码token获取失败");
+  } catch (error) {
+    LogManager.addLog("error", "❌ 获取验证码token失败: " + error.message);
+    return null;
+  }
+}
+
+async function simulateAppInitialization() {
+  LogManager.addLog("info", "🚀 开始模拟APP初始化流程...");
+  
+  try {
+    await callVersionCheck();
+    await callGlobalConfig();
+    await callAppConfig();
+    await callUserInfo();
+    await callVipCardList();
+    await callSocialUserList();
+    await callNoticeList();
+    await callBannerList();
+    await callBroadcastStats();
+    await callCategories();
+    await callWalletInfo();
+    await callOrderStatistics();
+    await callDeductRecord();
+    await callMenuList();
+    await callPendingSettlement();
+    await callDeductOption();
+    
+    LogManager.addLog("success", "✅ APP初始化完成");
+    return true;
+  } catch (error) {
+    LogManager.addLog("error", "❌ APP初始化失败: " + error.message);
+    return false;
+  }
+}
+
+async function callVersionCheck() {
+  const params = {
+    platform: "app-plus",
+    versionName: "一鸣电竞",
+    versionCode: "1512",
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/ap/app/version/check?" + new URLSearchParams(params);
+  const response = await fetchWithTimeout(
+    url,
+    {
+      method: "GET",
+      headers: generateFullHeaders(url)
+    },
+    5000
+  );
+  
+  if (!response.ok) {
+    throw new Error("版本检查失败: " + response.status);
+  }
+  
+  const result = await response.json();
+  if (result.code !== 0) {
+    throw new Error("版本检查错误: " + result.msg);
+  }
+  
+  return result;
+}
+
+async function callGlobalConfig() {
+  const params = {
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/ap/gloab_config?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callAppConfig() {
+  const params = {
+    page: "global",
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/agt/config/app?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callUserInfo() {
+  const params = {
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/member/user/get?" + new URLSearchParams(params);
+  const response = await fetchWithTimeout(
+    url,
+    {
+      method: "GET",
+      headers: generateFullHeaders(url)
+    },
+    5000
+  );
+  
+  if (!response.ok) {
+    throw new Error("用户信息获取失败: " + response.status);
+  }
+  
+  const result = await response.json();
+  if (result.code !== 0) {
+    throw new Error("用户信息错误: " + result.msg);
+  }
+  
+  if (result.data) {
+    currentUserId = result.data.id;
+    currentNickname = result.data.nickname || "未知用户";
+  }
+  
+  return result;
+}
+
+async function callVipCardList() {
+  const params = {
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/member/vip/card-list?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callSocialUserList() {
+  const params = {
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/member/social-user/list-by-user?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callNoticeList() {
+  const params = {
+    position: "10",
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/agt/notice/list?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callBannerList() {
+  const params = {
+    position: "2",
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/agt/banner/list?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callBroadcastStats() {
+  const params = {
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/ap/broadcast_stats?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callCategories() {
+  const params = {
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/agt/order/categories?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callWalletInfo() {
+  const params = {
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/pay/wallet/get-all?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callOrderStatistics() {
+  const params = {
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/agt/order/statistics?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callDeductRecord() {
+  const params = {
+    onlyShowMyPublish: "",
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/agt/deduct-record/merchant-summary?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callMenuList() {
+  const params = {
+    roleType: "21",
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/agt/menu/list?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callPendingSettlement() {
+  const params = {
+    merchantId: "0",
+    roleType: "21",
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/ap/pending_settlement?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  const response = await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return response.ok ? response.json() : null;
+}
+
+async function callDeductOption() {
+  const params = {
+    pageNo: "1",
+    pageSize: "100",
+    t: Date.now()
+  };
+  
+  const url = API_BASE_URL + "/app-api/agt/deduct-option/page?" + new URLSearchParams(params);
+  const headers = generateFullHeaders(url);
+  
+  await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  await fetch(url, {
+    method: "GET",
+    headers: headers
+  });
+  
+  return true;
+}
+
+function startGrabbing() {
+  mainStartGrabbing();
+}
+
+async function mainStartGrabbing() {
+  if (isGrabbing) {
+    stopGrabbing();
+    return;
+  }
+  
+  currentUserToken = document.getElementById("tokenInput").value.trim();
+  const gameId = document.getElementById("gameSelect").value;
+  const serverType = document.getElementById("serverSelect").value;
+  
+  if (!currentUserToken) {
+    alert("请先输入令牌！");
+    return;
+  }
+  
+  if (!gameId || !serverType) {
+    alert("请先选择游戏和区服！");
+    return;
+  }
+  
+  LogManager.addLog("info", "🔍 验证Token...");
+  
+  if (!(await checkTokenValidity())) {
+    alert("Token无效，请重新登录！");
+    return;
+  }
+  
+  LogManager.addLog("info", "🚀 开始模拟APP初始化...");
+  
+  if (!(await simulateAppInitialization())) {
+    alert("APP初始化失败，请重试！");
+    return;
+  }
+  
+  grabStatistics = {
+    totalAttempts: 0,
+    successfulGrabs: 0,
+    failedGrabs: 0,
+    lastSuccessTime: null
+  };
+  
+  isGrabbing = true;
+  const startButton = document.getElementById("startGrabBtn");
+  startButton.classList.add("grab-active");
+  startButton.innerHTML = '<i class="fas fa-stop"></i><span>停止抢单</span>';
+  startButton.onclick = function() {
+    stopGrabbing();
+  };
+  
+  LogManager.showPanel();
+  LogManager.addLog("success", "🚀 开始抢单流程...");
+  LogManager.addLog("info", "👤 当前用户: " + currentNickname + " (ID:" + currentUserId + ")");
+  
+  const refreshDelay = parseInt(document.getElementById("refreshDelay").value) || 200;
+  const grabDelay = parseInt(document.getElementById("grabDelay").value) || 100;
+  
+  LogManager.addLog("info", "⏰ 刷新延迟: " + refreshDelay + "ms, 抢单延迟: " + grabDelay + "ms");
+  
+  await grabLoop();
+  
+  grabInterval = setInterval(() => {
+    if (isGrabbing) {
+      grabLoop();
+    }
+  }, refreshDelay);
+  
+  LogManager.addLog("success", "✅ 抢单助手已启动！");
+}
+
+async function loginWithPassword() {
+  const mobile = document.getElementById("mobileInput").value.trim();
+  const password = document.getElementById("passwordInput").value.trim();
+  const loginStatus = document.getElementById("loginStatus");
+  
+  if (!mobile || !password) {
+    loginStatus.textContent = "请输入手机号和密码";
+    loginStatus.style.color = "#e74c3c";
+    loginStatus.style.display = "block";
+    return false;
+  }
+  
+  if (!/^1[3-9]\d{9}$/.test(mobile)) {
+    loginStatus.textContent = "请输入正确的手机号";
+    loginStatus.style.color = "#e74c3c";
+    loginStatus.style.display = "block";
+    return false;
+  }
+  
+  try {
+    loginStatus.textContent = "正在登录...";
+    loginStatus.style.color = "#3498db";
+    loginStatus.style.display = "block";
+    
+    const timestampParams = {
+      t: Date.now().toString()
+    };
+    
+    const url = API_BASE_URL + "/app-api/member/auth/login?" + new URLSearchParams(timestampParams);
+    
+    const requestBody = {
+      mobile: mobile,
+      password: password,
+      secretKey: null
+    };
+    
+    let sortedKeys = Object.keys(requestBody).sort();
+    sortedKeys.push("t");
+    
+    const signParams = {
+      ...requestBody,
+      t: timestampParams.t
+    };
+    
+    const signStr = sortedKeys.map(key => key + "=" + signParams[key]).join("&");
+    const signature = CryptoJS.HmacSHA256(signStr, SECRET_KEY).toString();
+    
+    const response = await fetchWithTimeout(url, {
+      method: "POST",
+      headers: {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+        "Content-Type": "application/json;charset=UTF-8",
+        "tenant-id": "1",
+        "terminal": "31",
+        "app-role": "0",
+        "xSignature": signature,
+        "X-Signature": signature,
+        "platform": "android",
+        "User-Agent": `Mozilla/5.0 (Linux; ${deviceInfo.androidVersion}; ${deviceInfo.phoneModel} Build/AP3A.240617.008; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/${deviceInfo.chromeVersion} Mobile Safari/537.36 uni-app Html5Plus/1.0 (Immersed/39.714287)`,
+        "Connection": "Keep-Alive",
+        "Host": "yh-club.aneapp.cn",
+        "Origin": "https://yh-club.aneapp.cn",
+        "Referer": "https://yh-club.aneapp.cn/"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      throw new Error("HTTP错误: " + response.status);
+    }
+    
+    const result = await response.json();
+    
+    if (result && result.code === 0 && result.data && result.data.accessToken) {
+      const accessToken = result.data.accessToken;
+      const userId = result.data.userId;
+      const nickname = result.data.nickname || "未知用户";
+      
+      loginStatus.textContent = "✅ 登录成功！";
+      loginStatus.style.color = "#2ecc71";
+      
+      const cleanToken = accessToken.replace(/[^\x00-\x7F]/g, "").trim();
+      document.getElementById("tokenInput").value = cleanToken;
+      currentUserToken = cleanToken;
+      currentUserId = userId;
+      currentNickname = nickname;
+      
+      LogManager.addLog("success", "✅ 手机号登录成功！用户: " + nickname + " (ID:" + userId + ")");
+      
+      setTimeout(() => {
+        closeMobileLoginModal();
+      }, 1000);
+      
+      SettingsManager.saveSettings();
+      return true;
+    }
+    
+    throw new Error(result.msg || "登录失败: 错误码" + result.code);
+  } catch (error) {
+    loginStatus.textContent = "❌ 登录失败: " + error.message;
+    loginStatus.style.color = "#e74c3c";
+    document.getElementById("passwordInput").value = "";
+    LogManager.addLog("error", "❌ 登录失败: " + error.message);
+    return false;
+  }
+}
+
+async function checkTokenValidity() {
+  if (!currentUserToken) {
+    LogManager.addLog("error", "❌ Token为空，请先登录");
+    return false;
+  }
+  
+  try {
+    const params = {
+      t: Date.now().toString()
+    };
+    
+    const url = API_BASE_URL + "/app-api/member/user/get?" + new URLSearchParams(params);
+    const response = await fetchWithTimeout(url, {
+      method: "GET",
+      headers: generateFullHeaders(url)
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      if (result && result.code === 0 && result.data && result.data.id) {
+        const userData = result.data;
+        currentUserId = userData.id;
+        currentNickname = userData.nickname || "未知";
+        LogManager.addLog("success", "✅ Token验证成功 - 用户: " + currentNickname + " (ID:" + currentUserId + ")");
+        return true;
+      } else {
+        LogManager.addLog("error", "❌ Token无效: " + (result.msg || "验证失败"));
+        return false;
+      }
+    }
+    
+    throw new Error("HTTP错误: " + response.status);
+  } catch (error) {
+    LogManager.addLog("error", "❌ Token验证失败: " + error.message);
+    return false;
+  }
+}
+
+function getCategoryIds(gameId, serverType) {
+  return gameServerMap[gameId] && gameServerMap[gameId][serverType] || [0];
+}
+
+async function refreshOrders() {
+  try {
+    const gameId = document.getElementById("gameSelect").value;
+    const serverType = document.getElementById("serverSelect").value;
+    
+    if (!gameId || !serverType) {
+      return [];
+    }
+    
+    const categoryIds = getCategoryIds(gameId, serverType);
+    const timestamp = Date.now();
+    
+    let allOrders = [];
+    
+    const requests1 = categoryIds.map(async categoryId => {
+      const params = {
+        gameId: gameId,
+        categoryId: categoryId,
+        pageNo: 1,
+        pageSize: 10,
+        from: "reload",
+        assignedOnly: 0,
+        t: timestamp
+      };
+      
+      const url = API_BASE_URL + "/app-api/agt/worker/order/order-grab-page?" + new URLSearchParams(params);
+      const headers = generateFullHeaders(url);
+      
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: headers
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.code === 0 && result.data && result.data.list) {
+            return result.data.list;
+          }
+        }
+      } catch (error) {}
+      
+      return [];
+    });
+    
+    const requests2 = categoryIds.map(async categoryId => {
+      const params = {
+        gameId: gameId,
+        categoryId: categoryId,
+        pageNo: 1,
+        pageSize: 10,
+        from: "0",
+        assignedOnly: 0,
+        t: timestamp + 100
+      };
+      
+      const url = API_BASE_URL + "/app-api/agt/worker/order/order-grab-page?" + new URLSearchParams(params);
+      const headers = generateFullHeaders(url);
+      
+      try {
+        const response = await fetch(url, {
+          method: "GET",
+          headers: headers
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.code === 0 && result.data && result.data.list) {
+            return result.data.list;
+          }
+        }
+      } catch (error) {}
+      
+      return [];
+    });
+    
+    const [results1, results2] = await Promise.all([
+      Promise.allSettled(requests1),
+      Promise.allSettled(requests2)
+    ]);
+    
+    const processResults = (results) => {
+      results.forEach(result => {
+        if (result.status === "fulfilled" && result.value) {
+          allOrders = allOrders.concat(result.value);
+        }
+      });
+    };
+    
+    processResults(results1);
+    processResults(results2);
+    
+    const uniqueOrders = [];
+    const orderIds = new Set();
+    
+    allOrders.forEach(order => {
+      if (order && order.id && !orderIds.has(order.id)) {
+        orderIds.add(order.id);
+        uniqueOrders.push(order);
+      }
+    });
+    
+    const filteredOrders = filterOrders(uniqueOrders);
+    pendingOrders = filteredOrders;
+    lastRefreshTime = Date.now();
+    
+    if (uniqueOrders.length > 0) {
+      LogManager.addLog("info", "📊 发现 " + uniqueOrders.length + " 个订单，" + filteredOrders.length + " 个符合条件");
+    }
+    
+    return filteredOrders;
+  } catch (error) {
+    return [];
+  }
+}
+
+function filterOrders(orders) {
+  const priceCheckEnabled = document.getElementById("priceCheck").checked;
+  const targetPrice = parseFloat(document.getElementById("globalPrice").value) || 0;
+  const whiteKeywordCheckEnabled = document.getElementById("whiteKeywordCheck").checked;
+  const whiteKeywords = document.getElementById("whiteKeyword").value;
+  const blackKeywordCheckEnabled = document.getElementById("blackKeywordCheck").checked;
+  const blackKeywords = document.getElementById("blackKeyword").value;
+  
+  return orders.filter(order => {
+    const priceYuan = (parseFloat(order.price) || 0) / 100;
+    
+    if (priceCheckEnabled && targetPrice > 0 && priceYuan < targetPrice) {
+      return false;
+    }
+    
+    const orderText = (order.title || "") + " " + (order.remark || "");
+    
+    if (whiteKeywordCheckEnabled && whiteKeywords.trim()) {
+      const whiteList = whiteKeywords.split("|").filter(kw => kw.trim());
+      if (whiteList.length > 0) {
+        if (!whiteList.some(keyword => orderText.includes(keyword.trim()))) {
+          return false;
+        }
+      }
+    }
+    
+    if (blackKeywordCheckEnabled && blackKeywords.trim()) {
+      const blackList = blackKeywords.split("|").filter(kw => kw.trim());
+      if (blackList.length > 0) {
+        if (blackList.some(keyword => orderText.includes(keyword.trim()))) {
+          return false;
+        }
+      }
+    }
+    
+    return true;
+  });
+}
+
+async function grabOrderWithFreshWxCode(orderId) {
+  try {
+    let orderPrice = "未知";
+    let orderTitle = "无标题";
+    
+    const order = pendingOrders.find(o => o.id == orderId);
+    if (order) {
+      const priceFen = parseFloat(order.price) || 0;
+      orderPrice = fenToYuan(priceFen);
+      orderTitle = order.title || "无标题";
+    }
+    
+    LogManager.addLog("grabbing", "🎯 尝试抢单: " + orderTitle.substring(0, 20) + "... (¥" + orderPrice + ")");
+    grabStatistics.totalAttempts++;
+    
+    const captchaToken = await getCaptchaToken();
+    if (!captchaToken) {
+      LogManager.addLog("error", "❌ 验证码token获取失败");
+      return {
+        success: false,
+        message: "验证码token获取失败"
+      };
+    }
+    
+    const timestamp = Date.now();
+    const params = {
+      id: orderId,
+      t: timestamp
+    };
+    
+    const url = API_BASE_URL + "/app-api/agt/worker/order/grabV3?" + new URLSearchParams(params);
+    const headers = generateFullHeaders(url, null, false);
+    headers.set("X-Captcha-Token", captchaToken);
+    
+    const response = await fetchWithTimeout(
+      url,
+      {
+        method: "POST",
+        headers: headers,
+        body: ""
+      },
+      8000
+    );
+    
+    let result;
+    try {
+      result = await response.json();
+    } catch (error) {
+      LogManager.addLog("error", "❌ 服务器返回的不是JSON格式");
+      grabStatistics.failedGrabs++;
+      return {
+        success: false,
+        message: "服务器返回格式错误"
+      };
+    }
+    
+    if (result?.code === 0 && result?.type === "need_captcha") {
+      LogManager.addLog("error", "❌ 验证码已过期");
+      grabStatistics.failedGrabs++;
+      return {
+        success: false,
+        message: "验证码已过期"
+      };
+    }
+    
+    if (result?.code === 0) {
+      LogManager.addLog("success", "🎉 抢单成功！" + orderTitle.substring(0, 15) + "... (¥" + orderPrice + ")");
+      playSuccessSound();
+      grabStatistics.successfulGrabs++;
+      grabStatistics.lastSuccessTime = new Date();
+      return {
+        success: true,
+        message: result.msg || "抢单成功"
+      };
+    }
+    
+    let errorMessage = "抢单失败";
+    if (result?.detail && result.detail.trim()) {
+      errorMessage = result.detail;
+    } else if (result?.msg && result.msg.trim()) {
+      errorMessage = result.msg;
+    } else if (result?.code) {
+      errorMessage = "错误码: " + result.code;
+    }
+    
+    LogManager.addLog("error", "❌ " + errorMessage);
+    grabStatistics.failedGrabs++;
+    return {
+      success: false,
+      message: errorMessage
+    };
+  } catch (error) {
+    LogManager.addLog("error", "❌ 网络错误: " + error.message);
+    grabStatistics.failedGrabs++;
+    return {
+      success: false,
+      message: "网络错误: " + error.message
+    };
+  }
+}
+
+async function grabLoop() {
+  if (!isGrabbing) return;
+  
+  try {
+    LogManager.addLog("info", "🔄 正在刷新订单...");
+    const orders = await refreshOrders();
+    
+    if (orders.length === 0) {
+      LogManager.addLog("info", "🔄 暂无订单，等待下一次刷新...");
+    } else {
+      LogManager.addLog("grabbing", "🎯 开始抢单，共有" + orders.length + "个订单...");
+      
+      for (const order of orders) {
+        if (!isGrabbing) break;
+        
+        if (order.id) {
+          await grabOrderWithFreshWxCode(order.id);
+        }
+        
+        const grabDelay = parseInt(document.getElementById("grabDelay").value) || 100;
+        await new Promise(resolve => setTimeout(resolve, grabDelay));
+      }
+    }
+  } catch (error) {
+    LogManager.addLog("error", "❌ 抢单循环出错: " + error.message);
+  }
+}
+
+function stopGrabbing() {
+  isGrabbing = false;
+  if (grabInterval) {
+    clearInterval(grabInterval);
+    grabInterval = null;
+  }
+  
+  const startButton = document.getElementById("startGrabBtn");
+  startButton.classList.remove("grab-active");
+  startButton.innerHTML = '<i class="fas fa-play"></i><span>开始抢单</span>';
+  startButton.onclick = function() {
+    startGrabbing();
+  };
+  
+  LogManager.addLog("info", "⏹️ 抢单已停止");
+  LogManager.addLog("info", "📊 统计：总尝试" + grabStatistics.totalAttempts + "次，成功" + grabStatistics.successfulGrabs + "次");
+}
+
+function initializePage() {
+  LogManager.addLog("info", "✅ 抢单助手已加载");
+  LogManager.initDragAndResize();
+  
+  const panel = document.getElementById("logPanelContainer");
+  const overlay = document.getElementById("logPanelOverlay");
+  const buttonHeight = document.querySelector(".start-grab-button-container").offsetHeight;
+  const initialTop = window.innerHeight - buttonHeight - 300 - 20;
+  
+  panel.style.display = "none";
+  overlay.style.display = "none";
+  panel.style.top = Math.max(10, initialTop) + "px";
+  panel.style.height = "300px";
+  
+  document.getElementById("toggleLogPanelBtn").addEventListener("click", function(e) {
+    e.stopPropagation();
+    LogManager.togglePanel();
+  });
+  
+  document.getElementById("minimizeLogPanelBtn").addEventListener("click", function(e) {
+    e.stopPropagation();
+    LogManager.minimizePanel();
+  });
+  
+  document.getElementById("closeLogPanelBtn").addEventListener("click", function(e) {
+    e.stopPropagation();
+    LogManager.minimizePanel();
+  });
+  
+  document.getElementById("logPanelOverlay").addEventListener("click", function() {
+    LogManager.minimizePanel();
+  });
+  
+  document.getElementById("mobileLoginBtn").addEventListener("click", function() {
+    openMobileLoginModal();
+  });
+  
+  window.addEventListener("resize", function() {
+    LogManager.adjustPanelPosition();
+  });
+  
+  initGameSelect();
+  
+  document.getElementById("gameSelect").addEventListener("change", function() {
+    const gameId = this.value;
+    const serverSelect = document.getElementById("serverSelect");
+    serverSelect.disabled = !gameId;
+    
+    if (gameId) {
+      const gameName = this.options[this.selectedIndex].text;
+      LogManager.addLog("info", "🎮 选择游戏：" + gameName + "（ID: " + gameId + "）");
+      SettingsManager.saveSettings();
+    } else {
+      serverSelect.value = "";
+    }
+  });
+  
+  document.getElementById("serverSelect").addEventListener("change", function() {
+    if (this.value) {
+      const serverName = this.options[this.selectedIndex].text;
+      LogManager.addLog("info", "🌐 选择区服：" + serverName);
+      SettingsManager.saveSettings();
+    }
+  });
+  
+  SettingsManager.loadSettings();
+  SettingsManager.initAutoSave();
+}
+
+function initGameSelect() {
+  const gameSelect = document.getElementById("gameSelect");
+  gameSelect.innerHTML = "";
+  
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "";
+  defaultOption.textContent = "请选择游戏";
+  gameSelect.appendChild(defaultOption);
+  
+  const games = new Set();
+  
+  [
+    { id: 15, name: "战备" },
+    { id: 1, name: "和平" },
+    { id: 18, name: "吃丹" },
+    { id: 3, name: "三角粥" },
+    { id: 2, name: "Pub" },
+    { id: 21, name: "金牌单" },
+    { id: 28, name: "暗区" }
+  ].forEach(game => {
+    if (!games.has(game.id)) {
+      games.add(game.id);
+      const option = document.createElement("option");
+      option.value = game.id;
+      option.textContent = game.name;
+      gameSelect.appendChild(option);
+    }
+  });
+}
+
+function openMobileLoginModal() {
+  document.getElementById("mobileLoginModal").style.display = "flex";
+  document.getElementById("loginStatus").textContent = "";
+  document.getElementById("loginStatus").style.display = "none";
+}
+
+function closeMobileLoginModal() {
+  document.getElementById("mobileLoginModal").style.display = "none";
+  document.getElementById("mobileInput").value = "";
+  document.getElementById("passwordInput").value = "";
+  document.getElementById("loginStatus").textContent = "";
+  document.getElementById("loginStatus").style.display = "none";
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
+}
+                </script>
+            </body>
+
+</html>
